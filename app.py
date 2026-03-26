@@ -23,6 +23,12 @@ log = logging.getLogger(__name__)
 DOWNLOAD_DIR = "downloads"
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
+# Verify ffmpeg is available at startup — fail loudly rather than silently
+_ffmpeg_check = subprocess.run(["ffmpeg", "-version"], capture_output=True)
+if _ffmpeg_check.returncode != 0:
+    raise EnvironmentError("ffmpeg is not installed or not on PATH. Aborting.")
+log.info("ffmpeg OK — %s", _ffmpeg_check.stdout.decode().splitlines()[0])
+
 # In-memory job store (use Redis for multi-worker production)
 JOBS: dict[str, dict] = {}
 
