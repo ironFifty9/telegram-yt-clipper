@@ -187,7 +187,15 @@ def process_clip(
 
         result = subprocess.run(cmd, capture_output=True, text=True)
         if result.returncode != 0:
-            raise RuntimeError(f"ffmpeg error:\n{result.stderr[-500:]}")
+            log.error("ffmpeg full stderr:\n%s", result.stderr)
+            error_lines = [
+                l for l in result.stderr.splitlines()
+                if l.strip() and not any(
+                    l.lstrip().startswith(p)
+                    for p in ("frame=", "fps=", "size=", "time=", "speed=", "bitrate=")
+                )
+            ]
+            raise RuntimeError("ffmpeg error:\n" + "\n".join(error_lines[-20:]))
 
         # Clean up source
         os.remove(src_file)
