@@ -219,6 +219,20 @@ def process_clip(
 
 # ── Routes ─────────────────────────────────────────────────────────────────────
 
+@app.route("/", methods=["GET"])
+def index():
+    return jsonify({
+        "service": "YouTube Clipper Bot",
+        "status": "running",
+        "endpoints": {
+            "POST /clip":          "Submit a clip job",
+            "GET  /status/<id>":   "Check job status",
+            "GET  /health":        "Health check"
+        },
+        "usage": "Send /clip <url> <start> <end> [filename] [mp3] to your Telegram bot"
+    })
+
+
 @app.route("/clip", methods=["POST"])
 def clip():
     """
