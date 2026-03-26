@@ -131,6 +131,9 @@ def process_clip(
                 if fmt == "mp4"
                 else "bestaudio/best"
             ),
+            # Cap at 1080p — 4K clips are huge and slow to download with no quality benefit
+            # for most use cases. Remove this line if you want original resolution.
+            "format_sort": ["res:1080", "ext:mp4:m4a"],
             "outtmpl":      f"{temp_base}.%(ext)s",
             "quiet":        True,
             "no_warnings":  True,
@@ -160,6 +163,7 @@ def process_clip(
         out_file = os.path.join(DOWNLOAD_DIR, f"{out_name}.{out_ext}")
 
         if fmt == "mp3":
+            # Audio-only: must decode to get mp3
             cmd = [
                 "ffmpeg", "-y",
                 "-ss", str(start_sec),
@@ -171,16 +175,16 @@ def process_clip(
                 out_file,
             ]
         else:
+            # Stream copy: cut without re-encoding — works at any resolution,
+            # near-instant, zero quality loss. -ss before -i = fast keyframe seek.
+            # -avoid_negative_ts make_zero fixes timestamp issues from mid-file seeks.
             cmd = [
                 "ffmpeg", "-y",
                 "-ss", str(start_sec),
                 "-i", src_file,
                 "-t", str(duration),
-                "-c:v", "libx264",
-                "-preset", "fast",
-                "-crf", "23",
-                "-c:a", "aac",
-                "-b:a", "128k",
+                "-c", "copy",
+                "-avoid_negative_ts", "make_zero",
                 "-movflags", "+faststart",
                 out_file,
             ]
